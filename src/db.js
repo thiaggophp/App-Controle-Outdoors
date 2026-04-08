@@ -22,7 +22,7 @@ export async function addSignupRequest(req){
 export async function deleteSignupRequest(email){try{const r=await pb.collection("outdoor_signup_requests").getFirstListItem(`email="${email}"`);await pb.collection("outdoor_signup_requests").delete(r.id)}catch{}}
 
 // ─── PONTOS ───
-export async function getPontos(ownerEmail){try{return await pb.collection("outdoor_pontos").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"nome"})}catch{return[]}}
+export async function getPontos(ownerEmail){try{return await pb.collection("outdoor_pontos").getFullList({filter:`ownerEmail="${ownerEmail}"`})}catch{return[]}}
 export async function savePonto(p){
   if(p.id)return pb.collection("outdoor_pontos").update(p.id,p);
   const c=await pb.collection("outdoor_pontos").create(p);p.id=c.id;return c;
@@ -30,8 +30,8 @@ export async function savePonto(p){
 export async function deletePonto(id){try{await pb.collection("outdoor_pontos").delete(id)}catch{}}
 
 // ─── CONTRATOS ───
-export async function getContratos(ownerEmail){try{return await pb.collection("outdoor_contratos").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-dataInicio"})}catch{return[]}}
-export async function getContratosByPonto(pontoId){try{return await pb.collection("outdoor_contratos").getFullList({filter:`pontoId="${pontoId}"`,sort:"-dataInicio"})}catch{return[]}}
+export async function getContratos(ownerEmail){try{return await pb.collection("outdoor_contratos").getFullList({filter:`ownerEmail="${ownerEmail}"`})}catch{return[]}}
+export async function getContratosByPonto(pontoId){try{return await pb.collection("outdoor_contratos").getFullList({filter:`pontoId="${pontoId}"`})}catch{return[]}}
 export async function saveContrato(c){
   if(c.id)return pb.collection("outdoor_contratos").update(c.id,c);
   const r=await pb.collection("outdoor_contratos").create(c);c.id=r.id;return r;
@@ -39,8 +39,8 @@ export async function saveContrato(c){
 export async function deleteContrato(id){try{await pb.collection("outdoor_contratos").delete(id)}catch{}}
 
 // ─── PAGAMENTOS ───
-export async function getPagamentos(ownerEmail){try{return await pb.collection("outdoor_pagamentos").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-mesReferencia"})}catch{return[]}}
-export async function getPagamentosByContrato(contratoId){try{return await pb.collection("outdoor_pagamentos").getFullList({filter:`contratoId="${contratoId}"`,sort:"-mesReferencia"})}catch{return[]}}
+export async function getPagamentos(ownerEmail){try{return await pb.collection("outdoor_pagamentos").getFullList({filter:`ownerEmail="${ownerEmail}"`})}catch{return[]}}
+export async function getPagamentosByContrato(contratoId){try{return await pb.collection("outdoor_pagamentos").getFullList({filter:`contratoId="${contratoId}"`})}catch{return[]}}
 export async function savePagamento(p){
   if(p.id)return pb.collection("outdoor_pagamentos").update(p.id,p);
   const c=await pb.collection("outdoor_pagamentos").create(p);p.id=c.id;return c;
