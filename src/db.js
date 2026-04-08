@@ -47,6 +47,26 @@ export async function savePagamento(p){
 }
 export async function deletePagamento(id){try{await pb.collection("outdoor_pagamentos").delete(id)}catch{}}
 
+// ─── BACKUP ───
+export async function exportAllData(ownerEmail){
+  const pontos=await getPontos(ownerEmail);
+  const contratos=await getContratos(ownerEmail);
+  const pagamentos=await getPagamentos(ownerEmail);
+  return{appName:"OutdoorControle",version:1,exportDate:new Date().toISOString(),ownerEmail,pontos,contratos,pagamentos};
+}
+export async function importAllData(data){
+  const pontoIdMap={},contratoIdMap={};
+  for(const p of data.pontos||[]){const oldId=p.id;p.id=null;const c=await savePonto(p);if(oldId)pontoIdMap[oldId]=c.id;}
+  for(const c of data.contratos||[]){
+    if(c.pontoId&&pontoIdMap[c.pontoId])c.pontoId=pontoIdMap[c.pontoId];
+    const oldId=c.id;c.id=null;const cr=await saveContrato(c);if(oldId)contratoIdMap[oldId]=cr.id;
+  }
+  for(const p of data.pagamentos||[]){
+    if(p.contratoId&&contratoIdMap[p.contratoId])p.contratoId=contratoIdMap[p.contratoId];
+    p.id=null;await savePagamento(p);
+  }
+}
+
 // ─── INIT ADMIN ───
 export async function initAdmin(){
   // Admin account is created once via API — no credentials compiled into the bundle
