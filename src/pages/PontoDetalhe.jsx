@@ -19,6 +19,8 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
   const[editContrato,setEditContrato]=useState(null);
   const[formC,setFormC]=useState({anunciante:"",contato:"",dataInicio:HOJE,dataFim:"",valorMensal:"",obs:""});
   const[formP,setFormP]=useState({mesReferencia:HOJE.slice(0,7),valor:"",status:"pendente"});
+  const[autoGerar,setAutoGerar]=useState(true);
+  const[geradasMsg,setGeradasMsg]=useState("");
 
   const recarregar=async()=>{
     const cs=await getContratosByPonto(ponto.id);setContratos(cs);
@@ -28,16 +30,29 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
   };
   useEffect(()=>{recarregar()},[ponto.id]);
 
-  const abrirContratoNovo=()=>{setEditContrato(null);setFormC({anunciante:"",contato:"",dataInicio:HOJE,dataFim:"",valorMensal:"",obs:""});setContratoModal(true)};
+  const abrirContratoNovo=()=>{setEditContrato(null);setFormC({anunciante:"",contato:"",dataInicio:HOJE,dataFim:"",valorMensal:"",obs:""});setAutoGerar(true);setGeradasMsg("");setContratoModal(true)};
   const abrirContratoEditar=(c)=>{setEditContrato(c);setFormC({...c,valorMensal:String(c.valorMensal||"")});setContratoModal(true)};
 
   const salvarContrato=async()=>{
     if(!formC.anunciante.trim())return;
     const c={...formC,ownerEmail:user.email,pontoId:ponto.id,valorMensal:parseFloat(formC.valorMensal)||0,status:"ativo"};
     if(editContrato){c.id=editContrato.id;c.status=editContrato.status}
-    await saveContrato(c);
-    // Atualiza status do ponto para ocupado se contrato ativo
-    if(!editContrato){await savePonto({...ponto,status:"ocupado"});onAtualizar({...ponto,status:"ocupado"})}
+    const saved=await saveContrato(c);
+    if(!editContrato){
+      await savePonto({...ponto,status:"ocupado"});onAtualizar({...ponto,status:"ocupado"});
+      if(autoGerar&&c.dataInicio&&c.dataFim){
+        const contratoId=saved.id||c.id;
+        let cur=new Date(c.dataInicio+"T12:00");cur=new Date(cur.getFullYear(),cur.getMonth(),1);
+        const endD=new Date(c.dataFim+"T12:00");const endMes=new Date(endD.getFullYear(),endD.getMonth(),1);
+        let count=0;
+        while(cur<=endMes){
+          const mes=cur.getFullYear()+"-"+String(cur.getMonth()+1).padStart(2,"0");
+          await savePagamento({mesReferencia:mes,valor:c.valorMensal,status:"pendente",dataPagamento:"",ownerEmail:user.email,contratoId,pontoId:ponto.id});
+          cur.setMonth(cur.getMonth()+1);count++;
+        }
+        if(count>0)setGeradasMsg(count+" cobranças geradas automaticamente");
+      }
+    }
     setContratoModal(false);await recarregar();
   };
 
@@ -69,6 +84,41 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
 
   const labels={outdoor:"Outdoor",frontlight:"Front-light",backlight:"Back-light",led:"Painel LED",totem:"Totem",busdoor:"Busdoor",outro:"Outro"};
 
+  const gerarFicha=()=>{
+    const fmt=v=>(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2});
+    const fmtD=s=>{if(!s)return"";const[y,m,d]=s.split("-");return`${d}/${m}/${y}`};
+    const ativo=contratos.find(c=>c.status==="ativo");
+    const pags=ativo?pagamentos[ativo.id]||[]:[];
+    const recebido=pags.filter(p=>p.status==="pago").reduce((s,p)=>s+p.valor,0);
+    const pendente=pags.filter(p=>p.status==="pendente").reduce((s,p)=>s+p.valor,0);
+    const janela=window.open("","_blank");
+    janela.document.write(`<html><head><title>Ficha — ${ponto.nome}</title>
+    <style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;padding:24px;color:#111;max-width:600px;margin:0 auto}h1{color:#0369a1;margin:0 0 4px}h2{color:#0369a1;font-size:14px;margin:18px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}p{margin:4px 0;font-size:14px}.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700}.ocupado{background:#dbeafe;color:#1d4ed8}.disponivel{background:#dcfce7;color:#166534}.manutencao{background:#fef9c3;color:#713f12}.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9}.val{font-weight:700}.verde{color:#16a34a}.vermelho{color:#dc2626}img{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:12px}@media print{button{display:none}}</style>
+    </head><body>
+    ${ponto.foto?`<img src="${ponto.foto}" alt="foto"/>`:""}
+    <h1>🖼️ ${ponto.nome}</h1>
+    <span class="badge ${ponto.status==="ocupado"?"ocupado":ponto.status==="manutencao"?"manutencao":"disponivel"}">${ponto.status==="ocupado"?"Ocupado":ponto.status==="manutencao"?"Manutenção":"Disponível"}</span>
+    <h2>Dados do Ponto</h2>
+    ${ponto.endereco?`<p>📍 ${ponto.endereco}</p>`:""}
+    <p>Tipo: ${labels[ponto.tipo]||ponto.tipo}</p>
+    ${ponto.largura>0&&ponto.altura>0?`<p>Dimensões: ${ponto.largura}×${ponto.altura}m</p>`:""}
+    ${ponto.iluminacao?"<p>💡 Ponto iluminado</p>":""}
+    ${ponto.trafego?`<p>🚗 Fluxo: ${ponto.trafego} veíc/dia</p>`:""}
+    ${ponto.obs?`<p>Obs: ${ponto.obs}</p>`:""}
+    ${ativo?`<h2>Contrato Ativo</h2>
+    <div class="row"><span>Anunciante</span><span class="val">${ativo.anunciante}</span></div>
+    ${ativo.contato?`<div class="row"><span>Contato</span><span class="val">${ativo.contato}</span></div>`:""}
+    <div class="row"><span>Período</span><span class="val">${fmtD(ativo.dataInicio)} — ${fmtD(ativo.dataFim)}</span></div>
+    <div class="row"><span>Valor mensal</span><span class="val verde">R$ ${fmt(ativo.valorMensal)}</span></div>
+    <h2>Financeiro</h2>
+    <div class="row"><span>Total recebido</span><span class="val verde">R$ ${fmt(recebido)}</span></div>
+    <div class="row"><span>Pendente</span><span class="val ${pendente>0?"vermelho":""}">R$ ${fmt(pendente)}</span></div>`:"<h2>Sem contrato ativo</h2>"}
+    <p style="color:#94a3b8;font-size:11px;margin-top:24px">Gerado em ${new Date().toLocaleDateString("pt-BR")} · OutdoorControle</p>
+    <button onclick="window.print()" style="margin-top:12px;padding:8px 20px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">Imprimir / Salvar PDF</button>
+    </body></html>`);
+    janela.document.close();
+  };
+
   return(<div style={{padding:"0 4px"}}>
     <button onClick={onVoltar} style={{background:"none",border:"none",color:"#0ea5e9",fontSize:14,cursor:"pointer",marginBottom:12,padding:0,display:"flex",alignItems:"center",gap:4}}>← Pontos</button>
 
@@ -76,7 +126,7 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
         <div>
           <div style={{color:"#f1f5f9",fontWeight:800,fontSize:18,marginBottom:4}}>🖼️ {ponto.nome}</div>
-          {ponto.endereco&&<div style={{color:"#64748b",fontSize:12}}>📍 {ponto.endereco}</div>}
+          {ponto.endereco&&<a href={"https://maps.google.com/?q="+encodeURIComponent(ponto.endereco)} target="_blank" rel="noreferrer" style={{color:"#38bdf8",fontSize:12,textDecoration:"none"}}>📍 {ponto.endereco}</a>}
           <div style={{color:"#475569",fontSize:11,marginTop:6,display:"flex",gap:10,flexWrap:"wrap"}}>
             <span>{labels[ponto.tipo]||ponto.tipo}</span>
             {ponto.largura>0&&ponto.altura>0&&<span>{ponto.largura}×{ponto.altura}m</span>}
@@ -84,9 +134,12 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
             {ponto.trafego&&<span>🚗 {ponto.trafego} veic/dia</span>}
           </div>
         </div>
-        <span style={{background:ponto.status==="ocupado"?"rgba(14,165,233,.15)":ponto.status==="manutencao"?"rgba(245,158,11,.15)":"rgba(34,197,94,.15)",color:ponto.status==="ocupado"?"#38bdf8":ponto.status==="manutencao"?"#f59e0b":"#22c55e",fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:12}}>
-          {ponto.status==="ocupado"?"Ocupado":ponto.status==="manutencao"?"Manutenção":"Disponível"}
-        </span>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+          <span style={{background:ponto.status==="ocupado"?"rgba(14,165,233,.15)":ponto.status==="manutencao"?"rgba(245,158,11,.15)":"rgba(34,197,94,.15)",color:ponto.status==="ocupado"?"#38bdf8":ponto.status==="manutencao"?"#f59e0b":"#22c55e",fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:12}}>
+            {ponto.status==="ocupado"?"Ocupado":ponto.status==="manutencao"?"Manutenção":"Disponível"}
+          </span>
+          <button onClick={gerarFicha} style={{background:"rgba(14,165,233,.08)",border:"1px solid rgba(14,165,233,.2)",borderRadius:8,padding:"4px 10px",color:"#38bdf8",fontSize:11,fontWeight:600,cursor:"pointer"}}>📄 Ficha</button>
+        </div>
       </div>
     </div>
 
@@ -158,6 +211,11 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
       <Input label="Valor mensal (R$)" type="number" value={formC.valorMensal} onChange={e=>setFormC({...formC,valorMensal:e.target.value})} placeholder="0,00" inputMode="decimal"/>
       {editContrato&&<Select label="Status" value={formC.status||"ativo"} onChange={e=>setFormC({...formC,status:e.target.value})} options={[{value:"ativo",label:"Ativo"},{value:"encerrado",label:"Encerrado"}]}/>}
       <Input label="Observações" value={formC.obs||""} onChange={e=>setFormC({...formC,obs:e.target.value})} placeholder="Detalhes adicionais..."/>
+      {!editContrato&&<label style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",cursor:"pointer"}}>
+        <input type="checkbox" checked={autoGerar} onChange={e=>setAutoGerar(e.target.checked)} style={{width:17,height:17,accentColor:"#0ea5e9"}}/>
+        <span style={{color:"#94a3b8",fontSize:13}}>Gerar cobranças mensais automaticamente</span>
+      </label>}
+      {geradasMsg&&<div style={{background:"rgba(34,197,94,.1)",border:"1px solid rgba(34,197,94,.2)",borderRadius:10,padding:"8px 12px",color:"#22c55e",fontSize:12,marginBottom:8}}>✓ {geradasMsg}</div>}
       <Btn onClick={salvarContrato}>{editContrato?"Salvar Alterações":"Criar Contrato"}</Btn>
     </Modal>
 

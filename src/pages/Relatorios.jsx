@@ -26,7 +26,23 @@ export default function Relatorios({user}){
       return{...p,recebido,contratoAtivo,totalContratos:cs.length};
     }).sort((a,b)=>b.recebido-a.recebido);
 
-    setDados({pontos,contratos,pagamentos,ativos,receitaMensal,totalRecebido,totalPendente,ocupados,taxaOcupacao,porPonto});
+    // Calendário de ocupação — 12 meses (3 passados + atual + 8 futuros)
+    const hoje=new Date();const meses=[];
+    for(let i=-3;i<=8;i++){const d=new Date(hoje.getFullYear(),hoje.getMonth()+i,1);meses.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"))}
+    const calendario=pontos.map(p=>{
+      const slots=meses.map(mes=>{
+        const cs=contratos.filter(c=>c.pontoId===p.id);
+        const ativo=cs.find(c=>{
+          const ini=c.dataInicio?.slice(0,7)||"";
+          const fim=c.dataFim?.slice(0,7)||"9999-12";
+          return ini<=mes&&mes<=fim&&c.status==="ativo";
+        });
+        if(p.status==="manutencao")return"manutencao";
+        return ativo?"ocupado":"disponivel";
+      });
+      return{...p,slots};
+    });
+    setDados({pontos,contratos,pagamentos,ativos,receitaMensal,totalRecebido,totalPendente,ocupados,taxaOcupacao,porPonto,meses,calendario});
   })()},[user.email]);
 
   const imprimir=()=>{
@@ -68,6 +84,22 @@ export default function Relatorios({user}){
       </div>
     </div>
 
+    <h3 style={{color:"#64748b",fontSize:12,fontWeight:700,letterSpacing:.8,marginBottom:8}}>CALENDÁRIO DE OCUPAÇÃO</h3>
+    <div style={{overflowX:"auto",marginBottom:20,background:"#0f1623",borderRadius:14,border:"1px solid rgba(255,255,255,0.06)"}}>
+      <table style={{borderCollapse:"collapse",minWidth:"100%"}}>
+        <thead><tr>
+          <th style={{padding:"10px 14px",color:"#475569",fontSize:11,fontWeight:700,textAlign:"left",whiteSpace:"nowrap",borderBottom:"1px solid rgba(255,255,255,0.06)",position:"sticky",left:0,background:"#0f1623",zIndex:1}}>PONTO</th>
+          {dados.meses.map(m=>{const[y,mn]=m.split("-");const ms=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];const isHoje=m===new Date().toISOString().slice(0,7);return(<th key={m} style={{padding:"8px 10px",color:isHoje?"#38bdf8":"#475569",fontSize:10,fontWeight:isHoje?800:600,textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.06)",whiteSpace:"nowrap",minWidth:52}}>{ms[parseInt(mn)-1]}<br/><span style={{fontSize:9}}>{y}</span></th>)})}
+        </tr></thead>
+        <tbody>{dados.calendario.map((p,i)=><tr key={p.id} style={{borderTop:i?`1px solid rgba(255,255,255,0.04)`:"none"}}>
+          <td style={{padding:"8px 14px",color:"#94a3b8",fontSize:12,fontWeight:600,whiteSpace:"nowrap",position:"sticky",left:0,background:"#0f1623",borderRight:"1px solid rgba(255,255,255,0.06)"}}>{p.nome}</td>
+          {p.slots.map((s,j)=><td key={j} style={{textAlign:"center",padding:"6px 4px"}}><div style={{width:36,height:20,borderRadius:5,background:s==="ocupado"?"#0ea5e9":s==="manutencao"?"#f59e0b":"rgba(34,197,94,.25)",margin:"0 auto"}} title={s}/></td>)}
+        </tr>)}</tbody>
+      </table>
+      <div style={{display:"flex",gap:16,padding:"8px 14px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+        {[["#22c55e25","Disponível"],["#0ea5e9","Ocupado"],["#f59e0b","Manutenção"]].map(([c,l])=><div key={l} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:14,height:14,borderRadius:3,background:c}}/><span style={{color:"#64748b",fontSize:10}}>{l}</span></div>)}
+      </div>
+    </div>
     <h3 style={{color:"#64748b",fontSize:12,fontWeight:700,letterSpacing:.8,marginBottom:8}}>RECEITA POR PONTO</h3>
     {dados.porPonto.map(p=><Card key={p.id}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
