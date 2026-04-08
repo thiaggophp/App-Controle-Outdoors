@@ -1,0 +1,53 @@
+import PocketBase from"pocketbase";
+const PB_URL=import.meta.env.VITE_PB_URL||"https://api.financascasa.online";
+export const pb=new PocketBase(PB_URL);
+
+// ─── ACCOUNTS ───
+export async function getAccount(email){try{return await pb.collection("outdoor_accounts").getFirstListItem(`email="${email}"`)}catch{return null}}
+export async function getAllAccounts(){try{return await pb.collection("outdoor_accounts").getFullList()}catch{return[]}}
+export async function saveAccount(acc){
+  const existing=await pb.collection("outdoor_accounts").getFirstListItem(`email="${acc.email}"`).catch(()=>null);
+  if(existing)return pb.collection("outdoor_accounts").update(existing.id,acc);
+  return pb.collection("outdoor_accounts").create(acc);
+}
+export async function deleteAccount(email){try{const r=await pb.collection("outdoor_accounts").getFirstListItem(`email="${email}"`);await pb.collection("outdoor_accounts").delete(r.id)}catch{}}
+
+// ─── SIGNUP REQUESTS ───
+export async function getSignupRequests(){try{return await pb.collection("outdoor_signup_requests").getFullList()}catch{return[]}}
+export async function addSignupRequest(req){
+  const existing=await pb.collection("outdoor_signup_requests").getFirstListItem(`email="${req.email}"`).catch(()=>null);
+  if(existing)return;
+  await pb.collection("outdoor_signup_requests").create(req);
+}
+export async function deleteSignupRequest(email){try{const r=await pb.collection("outdoor_signup_requests").getFirstListItem(`email="${email}"`);await pb.collection("outdoor_signup_requests").delete(r.id)}catch{}}
+
+// ─── PONTOS ───
+export async function getPontos(ownerEmail){try{return await pb.collection("outdoor_pontos").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"nome"})}catch{return[]}}
+export async function savePonto(p){
+  if(p.id)return pb.collection("outdoor_pontos").update(p.id,p);
+  const c=await pb.collection("outdoor_pontos").create(p);p.id=c.id;return c;
+}
+export async function deletePonto(id){try{await pb.collection("outdoor_pontos").delete(id)}catch{}}
+
+// ─── CONTRATOS ───
+export async function getContratos(ownerEmail){try{return await pb.collection("outdoor_contratos").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-dataInicio"})}catch{return[]}}
+export async function getContratosByPonto(pontoId){try{return await pb.collection("outdoor_contratos").getFullList({filter:`pontoId="${pontoId}"`,sort:"-dataInicio"})}catch{return[]}}
+export async function saveContrato(c){
+  if(c.id)return pb.collection("outdoor_contratos").update(c.id,c);
+  const r=await pb.collection("outdoor_contratos").create(c);c.id=r.id;return r;
+}
+export async function deleteContrato(id){try{await pb.collection("outdoor_contratos").delete(id)}catch{}}
+
+// ─── PAGAMENTOS ───
+export async function getPagamentos(ownerEmail){try{return await pb.collection("outdoor_pagamentos").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-mesReferencia"})}catch{return[]}}
+export async function getPagamentosByContrato(contratoId){try{return await pb.collection("outdoor_pagamentos").getFullList({filter:`contratoId="${contratoId}"`,sort:"-mesReferencia"})}catch{return[]}}
+export async function savePagamento(p){
+  if(p.id)return pb.collection("outdoor_pagamentos").update(p.id,p);
+  const c=await pb.collection("outdoor_pagamentos").create(p);p.id=c.id;return c;
+}
+export async function deletePagamento(id){try{await pb.collection("outdoor_pagamentos").delete(id)}catch{}}
+
+// ─── INIT ADMIN ───
+export async function initAdmin(){
+  // Admin account is created once via API — no credentials compiled into the bundle
+}
