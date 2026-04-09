@@ -25,22 +25,8 @@ export default function Pontos({user,onAbrirPonto}){
   };
   useEffect(()=>{recarregar()},[user.email]);
 
-  const abrirNovo=()=>{setEdit(null);setForm({nome:"",endereco:"",tipo:"outdoor",largura:"",altura:"",iluminacao:false,trafego:"",obs:"",foto:""});setModal(true)};
+  const abrirNovo=()=>{setEdit(null);setForm({nome:"",endereco:"",tipo:"outdoor",largura:"",altura:"",iluminacao:false,trafego:"",obs:""});setModal(true)};
   const abrirEditar=(p)=>{setEdit(p);setForm({...p,largura:String(p.largura||""),altura:String(p.altura||"")});setModal(true)};
-
-  const handleFoto=(e)=>{
-    const file=e.target.files?.[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const img=new Image();
-      img.onload=()=>{
-        const maxW=800;const scale=Math.min(1,maxW/img.width);
-        const canvas=document.createElement("canvas");canvas.width=img.width*scale;canvas.height=img.height*scale;
-        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-        setForm(f=>({...f,foto:canvas.toDataURL("image/jpeg",0.7)}));
-      };img.src=ev.target.result;
-    };reader.readAsDataURL(file);
-  };
 
   const salvar=async()=>{
     if(!form.nome.trim())return;
@@ -68,7 +54,6 @@ export default function Pontos({user,onAbrirPonto}){
       const b=badgePonto(p.status);
       return(<div key={p.id} style={{background:"#0f1623",borderRadius:18,marginBottom:10,border:"1px solid rgba(255,255,255,0.06)",overflow:"hidden"}}>
         <div onClick={()=>onAbrirPonto(p)} style={{cursor:"pointer"}}>
-          {p.foto&&<img src={p.foto} alt="foto" style={{width:"100%",height:140,objectFit:"cover",borderRadius:"16px 16px 0 0"}}/>}
           <div style={{padding:"16px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
               <div style={{flex:1}}>
@@ -114,15 +99,6 @@ export default function Pontos({user,onAbrirPonto}){
       </div>
       {edit&&<Select label="Status" value={form.status||"disponivel"} onChange={e=>setForm({...form,status:e.target.value})} options={[{value:"disponivel",label:"Disponível"},{value:"ocupado",label:"Ocupado"},{value:"manutencao",label:"Manutenção"}]}/>}
       <Input label="Observações" value={form.obs||""} onChange={e=>setForm({...form,obs:e.target.value})} placeholder="Detalhes adicionais..."/>
-      <div style={{marginBottom:16}}>
-        <div style={{color:"#94a3b8",fontSize:12,marginBottom:6}}>Foto do ponto</div>
-        {form.foto&&<img src={form.foto} alt="preview" style={{width:"100%",height:120,objectFit:"cover",borderRadius:10,marginBottom:8}}/>}
-        <label style={{display:"flex",alignItems:"center",gap:8,background:"rgba(14,165,233,.08)",border:"1px solid rgba(14,165,233,.2)",borderRadius:10,padding:"8px 14px",cursor:"pointer",color:"#38bdf8",fontSize:13,fontWeight:600,position:"relative",overflow:"hidden"}}>
-          📷 {form.foto?"Trocar foto":"Adicionar foto"}
-          <input type="file" accept="image/*" capture="environment" onChange={handleFoto} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}}/>
-        </label>
-        {form.foto&&<button onClick={()=>setForm(f=>({...f,foto:""}))} style={{background:"none",border:"none",color:"#64748b",fontSize:12,cursor:"pointer",marginTop:4}}>Remover foto</button>}
-      </div>
       <Btn onClick={salvar}>{edit?"Salvar Alterações":"Cadastrar Ponto"}</Btn>
     </Modal>
 

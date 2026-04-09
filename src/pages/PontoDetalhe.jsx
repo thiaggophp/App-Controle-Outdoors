@@ -95,7 +95,6 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
     janela.document.write(`<html><head><title>Ficha — ${ponto.nome}</title>
     <style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;padding:24px;color:#111;max-width:600px;margin:0 auto}h1{color:#0369a1;margin:0 0 4px}h2{color:#0369a1;font-size:14px;margin:18px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}p{margin:4px 0;font-size:14px}.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700}.ocupado{background:#dbeafe;color:#1d4ed8}.disponivel{background:#dcfce7;color:#166534}.manutencao{background:#fef9c3;color:#713f12}.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9}.val{font-weight:700}.verde{color:#16a34a}.vermelho{color:#dc2626}img{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:12px}@media print{button{display:none}}</style>
     </head><body>
-    ${ponto.foto?`<img src="${ponto.foto}" alt="foto"/>`:""}
     <h1>🖼️ ${ponto.nome}</h1>
     <span class="badge ${ponto.status==="ocupado"?"ocupado":ponto.status==="manutencao"?"manutencao":"disponivel"}">${ponto.status==="ocupado"?"Ocupado":ponto.status==="manutencao"?"Manutenção":"Disponível"}</span>
     <h2>Dados do Ponto</h2>
