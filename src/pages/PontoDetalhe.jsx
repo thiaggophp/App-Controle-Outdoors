@@ -1,6 +1,6 @@
 import{useState,useEffect}from"react";
 import{getContratosByPonto,saveContrato,deleteContrato,getPagamentosByContrato,savePagamento,deletePagamento,savePonto}from"../db";
-import{Btn,Input,Select}from"../components/FormElements";
+import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
 
@@ -207,7 +207,7 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
       <Input label="Contato (telefone)" value={formC.contato||""} onChange={e=>setFormC({...formC,contato:e.target.value})} placeholder="(11) 99999-9999"/>
       <Input label="Data de início" type="date" value={formC.dataInicio} onChange={e=>setFormC({...formC,dataInicio:e.target.value})}/>
       <Input label="Data de fim" type="date" value={formC.dataFim||""} onChange={e=>setFormC({...formC,dataFim:e.target.value})}/>
-      <Input label="Valor mensal (R$)" type="number" value={formC.valorMensal} onChange={e=>setFormC({...formC,valorMensal:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Valor mensal (R$)" value={formC.valorMensal} onChange={e=>setFormC({...formC,valorMensal:e.target.value})} placeholder="0,00"/>
       {editContrato&&<Select label="Status" value={formC.status||"ativo"} onChange={e=>setFormC({...formC,status:e.target.value})} options={[{value:"ativo",label:"Ativo"},{value:"encerrado",label:"Encerrado"}]}/>}
       <Input label="Observações" value={formC.obs||""} onChange={e=>setFormC({...formC,obs:e.target.value})} placeholder="Detalhes adicionais..."/>
       {!editContrato&&<label style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",cursor:"pointer"}}>
@@ -220,7 +220,7 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
 
     <Modal open={pagModal} onClose={()=>setPagModal(false)} title="Registrar Pagamento">
       <Input label="Mês de referência" type="month" value={formP.mesReferencia} onChange={e=>setFormP({...formP,mesReferencia:e.target.value})}/>
-      <Input label="Valor (R$)" type="number" value={formP.valor} onChange={e=>setFormP({...formP,valor:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Valor (R$)" value={formP.valor} onChange={e=>setFormP({...formP,valor:e.target.value})} placeholder="0,00"/>
       <Select label="Status" value={formP.status} onChange={e=>setFormP({...formP,status:e.target.value})} options={[{value:"pendente",label:"Pendente"},{value:"pago",label:"Pago"}]}/>
       <Btn onClick={salvarPagamento}>Registrar</Btn>
     </Modal>

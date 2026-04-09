@@ -1,6 +1,6 @@
 import{useState,useEffect}from"react";
 import{getPontos,savePonto,deletePonto,getContratosByPonto}from"../db";
-import{Btn,Input,Select}from"../components/FormElements";
+import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 
 const TIPOS=[{value:"outdoor",label:"Outdoor"},{value:"frontlight",label:"Front-light"},{value:"backlight",label:"Back-light"},{value:"led",label:"Painel LED"},{value:"totem",label:"Totem"},{value:"busdoor",label:"Busdoor"},{value:"outro",label:"Outro"}];
@@ -89,8 +89,8 @@ export default function Pontos({user,onAbrirPonto}){
       <Input label="Endereço" value={form.endereco||""} onChange={e=>setForm({...form,endereco:e.target.value})} placeholder="Rua, número, bairro"/>
       <Select label="Tipo" value={form.tipo} onChange={e=>setForm({...form,tipo:e.target.value})} options={TIPOS}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-        <Input label="Largura (m)" type="number" value={form.largura} onChange={e=>setForm({...form,largura:e.target.value})} placeholder="9"/>
-        <Input label="Altura (m)" type="number" value={form.altura} onChange={e=>setForm({...form,altura:e.target.value})} placeholder="3"/>
+        <InputMoney label="Largura (m)" value={form.largura} onChange={e=>setForm({...form,largura:e.target.value})} placeholder="9,00"/>
+        <InputMoney label="Altura (m)" value={form.altura} onChange={e=>setForm({...form,altura:e.target.value})} placeholder="3,00"/>
       </div>
       <Input label="Fluxo estimado (veíc/dia)" type="number" value={form.trafego||""} onChange={e=>setForm({...form,trafego:e.target.value})} placeholder="Ex: 5000"/>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
