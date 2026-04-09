@@ -119,7 +119,7 @@ export default function Pontos({user,onAbrirPonto}){
         {form.foto&&<img src={form.foto} alt="preview" style={{width:"100%",height:120,objectFit:"cover",borderRadius:10,marginBottom:8}}/>}
         <label style={{display:"flex",alignItems:"center",gap:8,background:"rgba(14,165,233,.08)",border:"1px solid rgba(14,165,233,.2)",borderRadius:10,padding:"8px 14px",cursor:"pointer",color:"#38bdf8",fontSize:13,fontWeight:600,position:"relative",overflow:"hidden"}}>
           📷 {form.foto?"Trocar foto":"Adicionar foto"}
-          <input type="file" accept="image/*" onChange={handleFoto} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}}/>
+          <input type="file" accept="image/*" capture="environment" onChange={handleFoto} style={{position:"absolute",inset:0,opacity:0,width:"100%",height:"100%",cursor:"pointer"}}/>
         </label>
         {form.foto&&<button onClick={()=>setForm(f=>({...f,foto:""}))} style={{background:"none",border:"none",color:"#64748b",fontSize:12,cursor:"pointer",marginTop:4}}>Remover foto</button>}
       </div>
