@@ -1,5 +1,5 @@
 import{useState,useEffect}from"react";
-import{getContratosByPonto,saveContrato,deleteContrato,getPagamentosByContrato,savePagamento,deletePagamento,savePonto}from"../db";
+import{getContratosByPonto,saveContrato,deleteContratoCascade,getPagamentosByContrato,savePagamento,deletePagamento,savePonto}from"../db";
 import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
@@ -64,7 +64,7 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
   };
 
   const excluirContrato=async()=>{
-    await deleteContrato(deleteModal.id);setDeleteModal(null);await recarregar();
+    await deleteContratoCascade(deleteModal.id);setDeleteModal(null);await recarregar();
   };
 
   const salvarPagamento=async()=>{

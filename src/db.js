@@ -67,6 +67,25 @@ export async function importAllData(data){
   }
 }
 
+// ─── CASCADE DELETE ───
+export async function deleteContratoCascade(contratoId){
+  const pagamentos=await getPagamentosByContrato(contratoId);
+  for(const p of pagamentos)await deletePagamento(p.id);
+  await deleteContrato(contratoId);
+}
+export async function deletePontoCascade(pontoId){
+  const contratos=await getContratosByPonto(pontoId);
+  for(const c of contratos)await deleteContratoCascade(c.id);
+  await deletePonto(pontoId);
+}
+export async function deleteUserCascade(email){
+  try{
+    const pontos=await getPontos(email);
+    for(const p of pontos)await deletePontoCascade(p.id);
+    await deleteAccount(email);
+  }catch{}
+}
+
 // ─── INIT ADMIN ───
 export async function initAdmin(){
   // Admin account is created once via API — no credentials compiled into the bundle

@@ -1,5 +1,5 @@
 import{useState,useEffect}from"react";
-import{getPontos,savePonto,deletePonto,getContratosByPonto}from"../db";
+import{getPontos,savePonto,deletePontoCascade,getContratosByPonto}from"../db";
 import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 
@@ -35,7 +35,7 @@ export default function Pontos({user,onAbrirPonto}){
     await savePonto(p);setModal(false);await recarregar();
   };
 
-  const excluir=async()=>{await deletePonto(deleteModal.id);setDeleteModal(null);await recarregar()};
+  const excluir=async()=>{await deletePontoCascade(deleteModal.id);setDeleteModal(null);await recarregar()};
 
   const filtrados=pontos.filter(p=>filtro==="todos"||p.status===filtro);
   const labels={outdoor:"Outdoor",frontlight:"Front-light",backlight:"Back-light",led:"Painel LED",totem:"Totem",busdoor:"Busdoor",outro:"Outro"};
