@@ -19,6 +19,8 @@ jobs:
             git pull
             npm install
             npm run build
+            BUILD_TS=$(date +%s)
+            sed -i "s/const CACHE=\"[^\"]*\"/const CACHE=\"outdoor-${BUILD_TS}\"/" dist/sw.js
             cp -r dist/* /var/www/outdoor-html/
             systemctl reload nginx
-            echo "Deploy OutdoorControle concluído!"
+            echo "Deploy OutdoorControle concluído! Cache SW: outdoor-${BUILD_TS}"
