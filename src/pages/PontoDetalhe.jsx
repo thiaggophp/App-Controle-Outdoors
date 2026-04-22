@@ -29,6 +29,12 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
     setPagamentos(pags);
   };
   useEffect(()=>{recarregar()},[ponto.id]);
+  useEffect(()=>{
+    try{const s=localStorage.getItem("outdoor_contrato_form");if(s)setFormC(f=>({...f,...JSON.parse(s)}))}catch{}
+    try{const s=localStorage.getItem("outdoor_pag_form");if(s)setFormP(f=>({...f,...JSON.parse(s)}))}catch{}
+  },[]);
+  useEffect(()=>{if(!editContrato)try{localStorage.setItem("outdoor_contrato_form",JSON.stringify(formC))}catch{}},[formC,editContrato]);
+  useEffect(()=>{try{localStorage.setItem("outdoor_pag_form",JSON.stringify(formP))}catch{}},[formP]);
 
   const abrirContratoNovo=()=>{setEditContrato(null);setFormC({anunciante:"",contato:"",dataInicio:HOJE,dataFim:"",valorMensal:"",obs:""});setAutoGerar(true);setGeradasMsg("");setContratoModal(true)};
   const abrirContratoEditar=(c)=>{setEditContrato(c);setFormC({...c,valorMensal:String(c.valorMensal||"")});setContratoModal(true)};
@@ -53,7 +59,7 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
         if(count>0)setGeradasMsg(count+" cobranças geradas automaticamente");
       }
     }
-    setContratoModal(false);await recarregar();
+    localStorage.removeItem("outdoor_contrato_form");setContratoModal(false);await recarregar();
   };
 
   const encerrarContrato=async(c)=>{
@@ -70,7 +76,7 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
   const salvarPagamento=async()=>{
     if(!formP.valor)return;
     const p={...formP,ownerEmail:user.email,contratoId:contratoAberto.id,pontoId:ponto.id,valor:parseFloat(formP.valor)||0};
-    await savePagamento(p);setPagModal(false);await recarregar();
+    await savePagamento(p);localStorage.removeItem("outdoor_pag_form");setPagModal(false);await recarregar();
   };
 
   const marcarPago=async(pag)=>{

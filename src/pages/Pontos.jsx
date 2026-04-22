@@ -24,6 +24,8 @@ export default function Pontos({user,onAbrirPonto}){
     setPontos(ps);
   };
   useEffect(()=>{recarregar()},[user.email]);
+  useEffect(()=>{const s=localStorage.getItem("outdoor_ponto_form");if(s)try{setForm(f=>({...f,...JSON.parse(s)}))}catch{}},[]);
+  useEffect(()=>{if(!edit)try{localStorage.setItem("outdoor_ponto_form",JSON.stringify(form))}catch{}},[form,edit]);
 
   const abrirNovo=()=>{setEdit(null);setForm({nome:"",endereco:"",tipo:"outdoor",largura:"",altura:"",iluminacao:false,trafego:"",obs:""});setModal(true)};
   const abrirEditar=(p)=>{setEdit(p);setForm({...p,largura:String(p.largura||""),altura:String(p.altura||"")});setModal(true)};
@@ -32,7 +34,7 @@ export default function Pontos({user,onAbrirPonto}){
     if(!form.nome.trim())return;
     const p={...form,ownerEmail:user.email,status:form.status||"disponivel",largura:parseFloat(form.largura)||0,altura:parseFloat(form.altura)||0};
     if(edit)p.id=edit.id;
-    await savePonto(p);setModal(false);await recarregar();
+    await savePonto(p);localStorage.removeItem("outdoor_ponto_form");setModal(false);await recarregar();
   };
 
   const excluir=async()=>{await deletePontoCascade(deleteModal.id);setDeleteModal(null);await recarregar()};
