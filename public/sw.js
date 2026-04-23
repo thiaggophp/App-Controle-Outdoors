@@ -1,4 +1,4 @@
-const CACHE="outdoor-v10";
+const CACHE="outdoor-v11";
 self.addEventListener("install",e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(["/","/index.html"])));
   self.skipWaiting();

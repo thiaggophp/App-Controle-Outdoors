@@ -93,26 +93,27 @@ export default function PontoDetalhe({ponto,user,onVoltar,onAtualizar}){
   const gerarFicha=()=>{
     const fmt=v=>(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2});
     const fmtD=s=>{if(!s)return"";const[y,m,d]=s.split("-");return`${d}/${m}/${y}`};
+    const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     const ativo=contratos.find(c=>c.status==="ativo");
     const pags=ativo?pagamentos[ativo.id]||[]:[];
     const recebido=pags.filter(p=>p.status==="pago").reduce((s,p)=>s+p.valor,0);
     const pendente=pags.filter(p=>p.status==="pendente").reduce((s,p)=>s+p.valor,0);
     const janela=window.open("","_blank");
-    janela.document.write(`<html><head><title>Ficha — ${ponto.nome}</title>
+    janela.document.write(`<html><head><title>Ficha — ${esc(ponto.nome)}</title>
     <style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;padding:24px;color:#111;max-width:600px;margin:0 auto}h1{color:#0369a1;margin:0 0 4px}h2{color:#0369a1;font-size:14px;margin:18px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}p{margin:4px 0;font-size:14px}.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700}.ocupado{background:#dbeafe;color:#1d4ed8}.disponivel{background:#dcfce7;color:#166534}.manutencao{background:#fef9c3;color:#713f12}.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9}.val{font-weight:700}.verde{color:#16a34a}.vermelho{color:#dc2626}img{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:12px}@media print{button{display:none}}</style>
     </head><body>
-    <h1>🖼️ ${ponto.nome}</h1>
+    <h1>🖼️ ${esc(ponto.nome)}</h1>
     <span class="badge ${ponto.status==="ocupado"?"ocupado":ponto.status==="manutencao"?"manutencao":"disponivel"}">${ponto.status==="ocupado"?"Ocupado":ponto.status==="manutencao"?"Manutenção":"Disponível"}</span>
     <h2>Dados do Ponto</h2>
-    ${ponto.endereco?`<p>📍 ${ponto.endereco}</p>`:""}
+    ${ponto.endereco?`<p>📍 ${esc(ponto.endereco)}</p>`:""}
     <p>Tipo: ${labels[ponto.tipo]||ponto.tipo}</p>
     ${ponto.largura>0&&ponto.altura>0?`<p>Dimensões: ${ponto.largura}×${ponto.altura}m</p>`:""}
     ${ponto.iluminacao?"<p>💡 Ponto iluminado</p>":""}
     ${ponto.trafego?`<p>🚗 Fluxo: ${ponto.trafego} veíc/dia</p>`:""}
     ${ponto.obs?`<p>Obs: ${ponto.obs}</p>`:""}
     ${ativo?`<h2>Contrato Ativo</h2>
-    <div class="row"><span>Anunciante</span><span class="val">${ativo.anunciante}</span></div>
-    ${ativo.contato?`<div class="row"><span>Contato</span><span class="val">${ativo.contato}</span></div>`:""}
+    <div class="row"><span>Anunciante</span><span class="val">${esc(ativo.anunciante)}</span></div>
+    ${ativo.contato?`<div class="row"><span>Contato</span><span class="val">${esc(ativo.contato)}</span></div>`:""}
     <div class="row"><span>Período</span><span class="val">${fmtD(ativo.dataInicio)} — ${fmtD(ativo.dataFim)}</span></div>
     <div class="row"><span>Valor mensal</span><span class="val verde">R$ ${fmt(ativo.valorMensal)}</span></div>
     <h2>Financeiro</h2>
